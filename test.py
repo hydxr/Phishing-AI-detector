@@ -3,8 +3,6 @@ import numpy as np
 import re
 import os
 import pickle
-import tkinter as tk
-from tkinter import messagebox, scrolledtext
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
@@ -12,12 +10,13 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.optimizers import Adam
 
-# Paths
+
+from flask import Flask, request, jsonify, render_template
+
 MODEL_PATH = "phishing_model.keras"
 VECTORIZER_PATH = "vectorizer.pkl"
-DATASET_PATH = "C:/Users/hp/Downloads/ARCHIVE/Phishing_Email.csv"
+DATASET_PATH = "C:/Users/hp/Downloads/ARCHIVE/Phishing_Email.csv" 
 
-# Preprocessing
 def preprocess_text(text):
     if not isinstance(text, str):
         return ""
@@ -27,7 +26,6 @@ def preprocess_text(text):
     text = text.strip()
     return text
 
-# Train model if missing
 if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
     print("Training model...")
 
@@ -65,78 +63,68 @@ if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
 else:
     print("Using pre-trained model.")
 
-# Load
+
+print("Loading model and vectorizer for the server...")
 model = load_model(MODEL_PATH)
 with open(VECTORIZER_PATH, 'rb') as f:
     vectorizer = pickle.load(f)
+print("Model and vectorizer loaded.")
 
-# Prediction logic
-def predict_email():
-    email_text = email_input.get("1.0", tk.END).strip()
-    if not email_text:
-        messagebox.showwarning("Input Required", "Please paste or type an email!")
-        return
 
+def check_email(email_text):
+    """Analyzes email text and returns a dictionary."""
     processed_text = preprocess_text(email_text)
     vectorized_text = vectorizer.transform([processed_text]).toarray()
     prediction = model.predict(vectorized_text)[0][0]
 
     if prediction > 0.7:
-        label = "Phishing ⚠️"
-        color = "red"
+        label = "PHISHING DETECTED"
+        css_class = "phishing"
     elif prediction < 0.3:
-        label = "Not Phishing ✅"
-        color = "lime"
+        label = "NO THREAT DETECTED"
+        css_class = "safe"
     else:
-        label = "Uncertain ⚠️"
-        color = "orange"
+        label = "UNCERTAIN THREAT LEVEL"
+        css_class = "uncertain"
 
-    label_result.config(
-        text=f"{label}\nConfidence: {prediction * 100:.2f}%",
-        fg=color
-    )
+    return {
+        "status": "success",
+        "label": label,
+        "confidence": float(prediction * 100),
+        "css_class": css_class
+    }
 
-def clear_text():
-    email_input.delete("1.0", tk.END)
-    label_result.config(text="")
 
-# --- GUI START ---
-window = tk.Tk()
-window.title("🛡️ Cyber Phishing Detector")
-window.geometry("750x600")
-window.configure(bg="#0e0e0e")
+app = Flask(__name__, static_url_path='', static_folder='.')
 
-# Fonts and Colors
-title_font = ("Consolas", 20, "bold")
-label_font = ("Consolas", 12)
-btn_font = ("Consolas", 12, "bold")
 
-# Title
-title = tk.Label(window, text="🛡️ CYBER PHISHING DETECTOR 🛡️", font=title_font, bg="#0e0e0e", fg="#00FF88")
-title.pack(pady=20)
+@app.route('/')
+def home():
+   
+    return app.send_static_file('index.html')
 
-# Instruction
-tk.Label(window, text="Paste Email Below:", font=label_font, bg="#0e0e0e", fg="white").pack()
+@app.route("/predict", methods=["POST"])
+def predict():
+    try:
+    
+        data = request.get_json()
+        email_text = data.get("email_text")
 
-# Email input
-email_input = scrolledtext.ScrolledText(window, width=90, height=15, font=("Courier New", 10), bg="#1e1e1e", fg="#00FF88", insertbackground="white", borderwidth=2, relief="solid")
-email_input.pack(pady=10)
+        if not email_text:
+            return jsonify({"status": "error", "message": "No email text provided."}), 400
 
-# Buttons
-button_frame = tk.Frame(window, bg="#0e0e0e")
-button_frame.pack()
+        
+        result = check_email(email_text)
+        
+        
+        return jsonify(result)
 
-btn_style = {"font": btn_font, "padx": 20, "pady": 8, "bd": 0}
+    except Exception as e:
+        print(f"Error during prediction: {e}")
+        return jsonify({"status": "error", "message": "Internal server error."}), 500
 
-predict_btn = tk.Button(button_frame, text="🚨 DETECT", command=predict_email, bg="#00FF88", fg="black", activebackground="#1f1f1f", activeforeground="white", **btn_style)
-predict_btn.grid(row=0, column=0, padx=10)
 
-clear_btn = tk.Button(button_frame, text="🧹 CLEAR", command=clear_text, bg="#444", fg="white", activebackground="#1f1f1f", activeforeground="white", **btn_style)
-clear_btn.grid(row=0, column=1, padx=10)
-
-# Result
-label_result = tk.Label(window, text="", font=("Consolas", 14, "bold"), bg="#0e0e0e")
-label_result.pack(pady=20)
-
-# Start GUI loop
-window.mainloop()
+if __name__ == "__main__":
+    print("\nStarting the Phishing Detector web server...")
+    print("Open this link in your browser: http://127.0.0.1:5000")
+    app.run(debug=False) 

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHISHGUARD AI | Cyber Threat Detector</title>
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="terminal-container">
+        <header class="terminal-header">
+            <div class="header-left">
+                <span class="logo">PHISHGUARD AI</span>
+                <span class="status-indicator online">ONLINE</span>
+            </div>
+            <div class="header-right">
+                <span class="module-name">Threat Analysis Console</span>
+            </div>
+        </header>
+
+        <div class="main-console">
+            <div class="left-panel">
+                <div class="panel-section input-section">
+                    <h2><span class="icon">💻</span> EMAIL INPUT // ANALYZE</h2>
+                    <div class="input-wrapper">
+                        <textarea id="email-input" rows="18" placeholder="Paste suspicious email text here..."></textarea>
+                    </div>
+                    <div class="buttons">
+                        <button id="detect-btn" class="cyber-btn primary-btn">
+                            <span class="btn-icon">🚨</span> INITIATE SCAN
+                        </button>
+                        <button id="clear-btn" class="cyber-btn secondary-btn">
+                            <span class="btn-icon">🧹</span> CLEAR CONSOLE
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-section result-display">
+                    <h2><span class="icon">📊</span> SCAN RESULT // REPORT</h2>
+                    <div id="result-container" class="output-log">
+                        <p class="log-message welcome-message">System initialized. Awaiting input...</p>
+                    </div>
+                </div>
+
+                <div class="panel-section stats-panel">
+                    <h2><span class="icon">✨</span> MODEL STATUS // LIVE</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Model Version:</span>
+                            <span class="stat-value">v1.2.1-beta</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Vector Size:</span>
+                            <span class="stat-value">5000 feats</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="terminal-footer">
+            <span class="footer-message">PHISHGUARD AI v1.0.0. Protocol Active.</span>
+            <span class="footer-timestamp"></span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+    
+</body>
+</html>
